@@ -1,7 +1,6 @@
 #!/bin/bash
 #
-# boot QEMU Aspeed machines using a flash or eMMC image checking
-# network and poweroff
+# boot QEMU machines images checking network and poweroff
 #
 # This work is licensed under the terms of the GNU GPL version 2. See
 # the COPYING file in the top-level directory.
@@ -9,13 +8,13 @@
 me=${0##*/}
 
 qemu_prefix="/usr"
-root_dir="."
+root_dir="./arm"
 quiet=
 dryrun=
 linux_quiet=
 step="null"
 extra_args="null"
-config="./aspeed-images.json"
+config="./arm-images.json"
 
 default_machines="ast2500-evb ast2600-evb"
 
