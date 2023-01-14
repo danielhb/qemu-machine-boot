@@ -14,6 +14,7 @@ linux_quiet=
 step="null"
 extra_args="null"
 
+available_archs="arm"
 arm_default_machines="ast2500-evb ast2600-evb"
 
 PASSED="[32mPASSED[0m"
@@ -92,6 +93,11 @@ shift 1
 
 if [ -z $arch ]; then
     echo "Setting 'architecture' is required"
+    exit 1
+fi
+
+if [[ ! " ${available_archs[*]} " =~ " ${arch} " ]]; then
+    echo "Invalid architecture $arch. Available architectures: $available_archs"
     exit 1
 fi
 
