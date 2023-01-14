@@ -105,7 +105,6 @@ if [ "$arch" == "arm" ]; then
     root_dir="./arm"
     config="./arm-images.json"
     default_machines=$arm_default_machines
-    qemu_bin="qemu-system-arm"
 fi
 
 if [ ! -z $user_root_dir ]; then
@@ -114,12 +113,6 @@ fi
 
 if [ ! -z $user_config ]; then
     config=$user_config
-fi
-
-qemu="$qemu_prefix/bin/$qemu_bin"
-if [ ! -f "$qemu" ]; then
-    echo "$me: no QEMU binaries in \"$qemu_prefix\" directory"
-    exit 1
 fi
 
 image_dir="$root_dir/images"
@@ -131,10 +124,11 @@ fi
 spawn_qemu()
 {
     local machine=$1
-    local image=$2
-    local timeout=$3
-    local poweroff=$4
-    local stop_step=$5
+    local qemu=$2
+    local image=$3
+    local timeout=$4
+    local poweroff=$5
+    local stop_step=$6
 
     # TODO: should "mmc" be a field in the test definition ?
     case "$image" in
@@ -260,6 +254,7 @@ for m in $tests_machines; do
     # Array of struct defining the tests to run 
     #
     # @machine: the QEMU target machine
+    # @binary: the QEMU binary to be used
     # @image: the relative path of the FW image (flash of eMMC). The top
     #         directory being ./images
     # @timeout: maximum expected duration of the test
@@ -268,7 +263,7 @@ for m in $tests_machines; do
     # @excluded: do not run the test
     #
     jq -c ".[] | select(.machine==\"$m\")" $config | while read entry; do
-	for field in machine image timeout poweroff stop_step excluded; do
+	for field in machine binary image timeout poweroff stop_step excluded; do
 	    eval $field=\""$(echo $entry | jq -r .$field)"\"
 	done
 
@@ -282,6 +277,12 @@ for m in $tests_machines; do
 
 	echo -n "$machine - $image : " >&3
 
+        qemu="$qemu_prefix/bin/$binary"
+        if [ ! -f "$qemu" ]; then
+            echo "unable to find QEMU binary $binary in \"$qemu_prefix\" directory" >&3
+            continue;
+        fi
+
 	image_path="$image_dir/$machine/$image"
 	if [ ! -f "$image_path" ]; then
 	    echo "invalid image"  >&3
@@ -289,7 +290,7 @@ for m in $tests_machines; do
 	fi
 
 	start=$(date +%s)
-	spawn_qemu $machine $image_path $timeout "$poweroff" $stop_step &&
+	spawn_qemu $machine $qemu $image_path $timeout "$poweroff" $stop_step &&
 	    pass=$PASSED || pass=$FAILED
 	end=$(date +%s)
 	echo " $pass ($(($end-$start))s)" >&3

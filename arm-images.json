@@ -1,21 +1,25 @@
 [
     {
 	"machine" : "ast2500-evb",
+	"binary": "qemu-system-arm",
 	"image" : "buildroot-2022.05/flash.img",
 	"timeout" : 30
     },
     {
 	"machine" : "ast2500-evb",
+	"binary": "qemu-system-arm",
 	"image" : "buildroot-2022.11-2-g15d3648df9/flash.img",
 	"timeout" : 30
     },
     {
 	"machine" : "ast2600-evb",
+	"binary": "qemu-system-arm",
 	"image" : "buildroot-2022.05/flash.img",
 	"timeout" : 30
     },
     {
 	"machine" : "ast2600-evb",
+	"binary": "qemu-system-arm",
 	"image" : "buildroot-2022.11-2-g15d3648df9/flash.img",
 	"timeout" : 30
     }
