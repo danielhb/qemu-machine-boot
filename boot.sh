@@ -125,10 +125,11 @@ spawn_qemu()
 {
     local machine=$1
     local qemu=$2
-    local image=$3
-    local timeout=$4
-    local poweroff=$5
-    local stop_step=$6
+    local kernel=$3
+    local image=$4
+    local timeout=$5
+    local poweroff=$6
+    local stop_step=$7
 
     # TODO: should "mmc" be a field in the test definition ?
     case "$image" in
@@ -144,6 +145,11 @@ spawn_qemu()
     esac
 
     qemu_cmd="$qemu -M ${machine}"
+
+    if [[ "$kernel" != "null" ]]; then
+        qemu_cmd="$qemu_cmd -kernel $kernel"
+    fi
+
     qemu_cmd="$qemu_cmd $drive_args -nic user"
     qemu_cmd="$qemu_cmd -serial stdio -nodefaults -nographic -snapshot"
 
@@ -255,6 +261,7 @@ for m in $tests_machines; do
     #
     # @machine: the QEMU target machine
     # @binary: the QEMU binary to be used
+    # @kernel: kernel image to use
     # @image: the relative path of the FW image (flash of eMMC). The top
     #         directory being ./images
     # @timeout: maximum expected duration of the test
@@ -263,7 +270,7 @@ for m in $tests_machines; do
     # @excluded: do not run the test
     #
     jq -c ".[] | select(.machine==\"$m\")" $config | while read entry; do
-	for field in machine binary image timeout poweroff stop_step excluded; do
+	for field in machine binary kernel image timeout poweroff stop_step excluded; do
 	    eval $field=\""$(echo $entry | jq -r .$field)"\"
 	done
 
@@ -283,6 +290,15 @@ for m in $tests_machines; do
             continue;
         fi
 
+	kernel_path=null
+        if [[ "$kernel" != "null" ]]; then
+            kernel_path="$image_dir/$machine/$kernel"
+            if [ ! -f "$kernel_path" ]; then
+                echo "invalid kernel: $kernel_path"  >&3
+                continue;
+            fi
+        fi
+
 	image_path="$image_dir/$machine/$image"
 	if [ ! -f "$image_path" ]; then
 	    echo "invalid image"  >&3
@@ -290,7 +306,7 @@ for m in $tests_machines; do
 	fi
 
 	start=$(date +%s)
-	spawn_qemu $machine $qemu $image_path $timeout "$poweroff" $stop_step &&
+	spawn_qemu $machine $qemu $kernel_path $image_path $timeout "$poweroff" $stop_step &&
 	    pass=$PASSED || pass=$FAILED
 	end=$(date +%s)
 	echo " $pass ($(($end-$start))s)" >&3
