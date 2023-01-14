@@ -16,7 +16,7 @@ step="null"
 extra_args="null"
 config="./arm-images.json"
 
-default_machines="ast2500-evb ast2600-evb"
+arm_default_machines="ast2500-evb ast2600-evb"
 
 PASSED="[32mPASSED[0m"
 FAILED="[31mFAILED[0m"
@@ -33,7 +33,7 @@ usage()
     cat <<EOF
 $me 2.0
 
-Usage: $me [OPTION] <machine> ...
+Usage: $me [OPTION] architecture <machine> ...
 
 Known values for OPTION are:
 
@@ -46,9 +46,13 @@ Known values for OPTION are:
     -s|--step <STEP>	Stop test at step: FW, Linux, login
     -n|--dry-run	trial run
 
+Available architectures:
+
+    arm (qemu-system-arm binary)
+
 Default machines are:
 
-    $default_machines
+    arm: $arm_default_machines
 
 EOF
     exit 1;
@@ -85,7 +89,22 @@ do
     esac
 done
 
-qemu="$qemu_prefix/bin/qemu-system-arm"
+arch=$1
+shift 1
+
+if [ -z $arch ]; then
+    echo "Setting 'architecture' is required"
+    exit 1
+fi
+
+if [ "$arch" == "arm" ]; then
+    root_dir="./arm"
+    config="./arm-images.json"
+    default_machines=$arm_default_machines
+    qemu_bin="qemu-system-arm"
+fi
+
+qemu="$qemu_prefix/bin/$qemu_bin"
 if [ ! -f "$qemu" ]; then
     echo "$me: no QEMU binaries in \"$qemu_prefix\" directory"
     exit 1
