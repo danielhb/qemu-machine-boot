@@ -8,13 +8,11 @@
 me=${0##*/}
 
 qemu_prefix="/usr"
-root_dir="./arm"
 quiet=
 dryrun=
 linux_quiet=
 step="null"
 extra_args="null"
-config="./arm-images.json"
 
 arm_default_machines="ast2500-evb ast2600-evb"
 
@@ -80,10 +78,10 @@ do
 	-q|--quiet)	quiet=1; shift 1;;
 	-Q|--linux-quiet)	linux_quiet=1; shift 1;;
 	-p|--prefix)	qemu_prefix="$2"; shift 2;;
-	-r|--root)	root_dir="$2"; shift 2;;
+	-r|--root)	user_root_dir="$2"; shift 2;;
 	-s|--step)	step="$2"; shift 2;;
 	-n|--dry-run)	dryrun=1; shift 2;;
-	-c|--config)    config="$2"; shift 2;;
+	-c|--config)    user_config="$2"; shift 2;;
 	--)		shift 1; break ;;
 	*)		break ;;
     esac
@@ -102,6 +100,14 @@ if [ "$arch" == "arm" ]; then
     config="./arm-images.json"
     default_machines=$arm_default_machines
     qemu_bin="qemu-system-arm"
+fi
+
+if [ ! -z $user_root_dir ]; then
+    root_dir=$user_root_dir
+fi
+
+if [ ! -z $user_config ]; then
+    config=$user_config
 fi
 
 qemu="$qemu_prefix/bin/$qemu_bin"
