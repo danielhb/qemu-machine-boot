@@ -14,8 +14,9 @@ linux_quiet=
 step="null"
 extra_args="null"
 
-available_archs="arm"
+available_archs="arm riscv"
 arm_default_machines="ast2500-evb ast2600-evb"
+riscv_default_machines="virt32 virt64"
 
 PASSED="[32mPASSED[0m"
 FAILED="[31mFAILED[0m"
@@ -107,6 +108,12 @@ if [ "$arch" == "arm" ]; then
     default_machines=$arm_default_machines
 fi
 
+if [ "$arch" == "riscv" ]; then
+    root_dir="./riscv"
+    config="./riscv-images.json"
+    default_machines=$riscv_default_machines
+fi
+
 if [ ! -z $user_root_dir ]; then
     root_dir=$user_root_dir
 fi
@@ -144,13 +151,38 @@ spawn_qemu()
 	    ;;
     esac
 
+    # ARM Aspeed network setting
+    network="-nic user"
+
+    # virt32 and virt64 are aliases used in the json file to allow
+    # the same 'virt' machine to have different configurations, since
+    # the machine name is also the unique ID of the config.
+    #
+    # If we're running 'riscv' update the defaults. TODO: put the
+    # 'append' config in the JSON.
+    case "$machine" in
+        virt32|virt64)
+            machine=virt
+            if [ "$arch" == "riscv" ]; then
+                drive_args="-drive file=$image,format=raw,id=hd0 -device virtio-blk-device,drive=hd0"
+                append="\"rootwait root=/dev/vda ro\""
+                network="-netdev user,id=net0 -device virtio-net-device,netdev=net0"
+            fi
+            ;;
+        *)
+            ;;
+    esac
+
     qemu_cmd="$qemu -M ${machine}"
 
     if [[ "$kernel" != "null" ]]; then
         qemu_cmd="$qemu_cmd -kernel $kernel"
+        if [[ "$append" != "null" ]]; then
+            qemu_cmd="$qemu_cmd -append $append"
+        fi
     fi
 
-    qemu_cmd="$qemu_cmd $drive_args -nic user"
+    qemu_cmd="$qemu_cmd $drive_args $network"
     qemu_cmd="$qemu_cmd -serial stdio -nodefaults -nographic -snapshot"
 
     if [ -n "$dryrun" ]; then

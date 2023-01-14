@@ -1,0 +1,16 @@
+[
+    {
+	"machine" : "virt32",
+	"binary": "qemu-system-riscv32",
+	"kernel" : "buildroot/Image",
+	"image" : "buildroot/rootfs.ext2",
+	"timeout" : 30
+    },
+    {
+	"machine" : "virt64",
+	"binary": "qemu-system-riscv64",
+	"kernel" : "buildroot/Image",
+	"image" : "buildroot/rootfs.ext2",
+	"timeout" : 30
+    }
+]
